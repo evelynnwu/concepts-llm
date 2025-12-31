@@ -234,6 +234,21 @@ def generate_instruction_pairs(item: ExtractedItem) -> list[dict]:
                 "output": item.content
             })
 
+    elif item.item_type == 'note':
+        # Notes often contain important clarifications and examples
+        pairs.append({
+            "instruction": "Explain this important note about the concept.",
+            "input": "",
+            "output": item.content
+        })
+        # If the note contains an example with sets, generate a more specific question
+        if 'example' in item.content.lower() or '=' in item.content:
+            pairs.append({
+                "instruction": "Give me an example that illustrates this concept.",
+                "input": "",
+                "output": item.content
+            })
+
     return pairs
 
 
@@ -340,50 +355,82 @@ def parse_pdf_sections(text: str) -> list[dict]:
     """
     Parse PDF text into sections based on common textbook patterns.
     Returns a list of sections with their type and content.
+
+    Optimized for CMU 21-127 Concepts textbook format:
+    - "Definition." followed by content (in pink boxes)
+    - "Theorem X.Y.Z (Name)." followed by content (in green boxes)
+    - "Note." for explanatory remarks
+    - "Proof." for proofs
     """
     sections = []
 
-    # Common patterns in math textbooks (customize these for your textbook)
+    # Patterns optimized for CMU Concepts textbook format
     patterns = {
-        # Definition patterns
+        # Definition: "Definition." followed by content until next section
         'definition': [
-            r'Definition\s*[\d.]*[:\s]+([^\n]+)\n(.*?)(?=(?:Definition|Theorem|Lemma|Proposition|Corollary|Example|Proof|Exercise|\n\n\d+\.\d+|\Z))',
-            r'DEFINITION\s*[\d.]*[:\s]+([^\n]+)\n(.*?)(?=(?:DEFINITION|THEOREM|LEMMA|EXAMPLE|PROOF|\Z))',
+            r'Definition\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Proposition\s+\d|Corollary\s+\d|Note\.|Proof\.|Example\s*\d|\Z))',
         ],
-        # Theorem patterns
+        # Theorem: "Theorem X.Y.Z (Name)." followed by content
         'theorem': [
-            r'Theorem\s*[\d.]*(?:\s*\(([^)]+)\))?[:\s]*(.*?)(?=Proof|(?:Definition|Theorem|Lemma|Example|Exercise|\n\n\d+\.\d+|\Z))',
-            r'THEOREM\s*[\d.]*[:\s]*(.*?)(?=PROOF|(?:DEFINITION|THEOREM|\Z))',
+            r'Theorem\s+([\d.]+)\s*\(([^)]+)\)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Proof\.|Example|\Z))',
+            r'Theorem\s+([\d.]+)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Proof\.|Example|\Z))',
         ],
         # Lemma patterns
         'lemma': [
-            r'Lemma\s*[\d.]*(?:\s*\(([^)]+)\))?[:\s]*(.*?)(?=Proof|(?:Definition|Theorem|Lemma|Example|\Z))',
+            r'Lemma\s+([\d.]+)\s*\(([^)]+)\)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Proof\.|\Z))',
+            r'Lemma\s+([\d.]+)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Proof\.|\Z))',
         ],
-        # Proof patterns
+        # Proposition
+        'proposition': [
+            r'Proposition\s+([\d.]+)\s*\(([^)]+)\)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Proposition\s+\d|Note\.|Proof\.|\Z))',
+            r'Proposition\s+([\d.]+)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Proposition\s+\d|Note\.|Proof\.|\Z))',
+        ],
+        # Corollary
+        'corollary': [
+            r'Corollary\s+([\d.]+)\s*\(([^)]+)\)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Corollary\s+\d|Note\.|Proof\.|\Z))',
+            r'Corollary\s+([\d.]+)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Corollary\s+\d|Note\.|Proof\.|\Z))',
+        ],
+        # Proof patterns - ends with box symbol or next section
         'proof': [
-            r'Proof[:\s]*(.*?)(?:□|∎|QED|Q\.E\.D\.|(?=Definition|Theorem|Lemma|Example|Exercise|\n\n\d+\.\d+))',
-            r'PROOF[:\s]*(.*?)(?:□|∎|QED|(?=DEFINITION|THEOREM|\Z))',
+            r'Proof\.\s*(.*?)(?:□|∎|\n\n(?=Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Example))',
+        ],
+        # Note: "Note." followed by explanatory content
+        'note': [
+            r'Note\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Lemma\s+\d|Note\.|Proof\.|Example|\Z))',
         ],
         # Example patterns
         'example': [
-            r'Example\s*[\d.]*[:\s]*(.*?)(?=(?:Definition|Theorem|Lemma|Example|Exercise|Solution|\n\n\d+\.\d+|\Z))',
+            r'Example\s+([\d.]+)\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Example\s+\d|Note\.|Exercise|\Z))',
+            r'Example\.\s*(.*?)(?=(?:Definition\.|Theorem\s+\d|Note\.|Exercise|\Z))',
         ],
         # Exercise patterns
         'exercise': [
-            r'Exercise\s*[\d.]*[:\s]*(.*?)(?=(?:Exercise|Solution|\n\n\d+\.\d+|\Z))',
-            r'Problem\s*[\d.]*[:\s]*(.*?)(?=(?:Problem|Solution|\Z))',
+            r'Exercise\s+([\d.]+)\.\s*(.*?)(?=(?:Exercise\s+\d|Solution|\Z))',
         ],
     }
 
     for item_type, regex_list in patterns.items():
         for pattern in regex_list:
-            matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
+            matches = re.findall(pattern, text, re.DOTALL)
             for match in matches:
+                title = None
+                content = None
+
                 if isinstance(match, tuple):
-                    title = match[0].strip() if len(match) > 1 and match[0] else None
-                    content = match[-1].strip()
+                    if len(match) == 3:
+                        # Pattern: (number, name, content) e.g., Theorem 2.1.3 (Name)
+                        number, name, content = match
+                        title = f"{name}" if name else f"{item_type.capitalize()} {number}"
+                        content = content.strip()
+                    elif len(match) == 2:
+                        # Pattern: (number, content) e.g., Theorem 2.1.3.
+                        number, content = match
+                        title = f"{item_type.capitalize()} {number}"
+                        content = content.strip()
+                    else:
+                        # Single group
+                        content = match[-1].strip()
                 else:
-                    title = None
                     content = match.strip()
 
                 if content and len(content) > 20:  # Skip very short matches
