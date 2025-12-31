@@ -1,0 +1,86 @@
+% Sample LaTeX format that the data preparation script can parse
+% Adjust the script's environment names to match your actual notes
+
+\documentclass{article}
+\usepackage{amsmath, amsthm}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+
+\begin{document}
+
+\section{Mathematical Induction}
+
+\begin{definition}[Principle of Mathematical Induction]
+Let $P(n)$ be a statement about positive integers. If:
+\begin{enumerate}
+    \item $P(1)$ is true (base case), and
+    \item For all $k \geq 1$, if $P(k)$ is true then $P(k+1)$ is true (inductive step)
+\end{enumerate}
+Then $P(n)$ is true for all positive integers $n$.
+\end{definition}
+
+\begin{theorem}[Sum of First n Natural Numbers]
+For all positive integers $n$:
+\[ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} \]
+\end{theorem}
+
+\begin{proof}
+We proceed by induction on $n$.
+
+\textbf{Base case:} When $n = 1$, the left side is $1$ and the right side is $\frac{1 \cdot 2}{2} = 1$. So the formula holds for $n = 1$.
+
+\textbf{Inductive step:} Assume the formula holds for some $k \geq 1$, i.e.,
+\[ \sum_{i=1}^{k} i = \frac{k(k+1)}{2} \]
+
+We need to show it holds for $k + 1$:
+\begin{align*}
+\sum_{i=1}^{k+1} i &= \sum_{i=1}^{k} i + (k+1) \\
+&= \frac{k(k+1)}{2} + (k+1) \quad \text{(by inductive hypothesis)} \\
+&= \frac{k(k+1) + 2(k+1)}{2} \\
+&= \frac{(k+1)(k+2)}{2}
+\end{align*}
+
+This is exactly the formula with $n = k + 1$. By the principle of mathematical induction, the formula holds for all positive integers $n$.
+\end{proof}
+
+\begin{example}[Verifying the formula]
+Let's verify for $n = 5$:
+\begin{itemize}
+    \item Left side: $1 + 2 + 3 + 4 + 5 = 15$
+    \item Right side: $\frac{5 \cdot 6}{2} = 15$ \checkmark
+\end{itemize}
+\end{example}
+
+\section{Strong Induction}
+
+\begin{definition}[Strong Induction]
+Let $P(n)$ be a statement. If:
+\begin{enumerate}
+    \item $P(1)$ is true, and
+    \item For all $k \geq 1$, if $P(1), P(2), \ldots, P(k)$ are all true, then $P(k+1)$ is true
+\end{enumerate}
+Then $P(n)$ is true for all positive integers $n$.
+\end{definition}
+
+\begin{theorem}[Fundamental Theorem of Arithmetic - Existence]
+Every integer $n \geq 2$ can be written as a product of primes.
+\end{theorem}
+
+\begin{proof}
+We use strong induction on $n$.
+
+\textbf{Base case:} $n = 2$ is itself prime, so it is a product of primes (a product with one factor).
+
+\textbf{Inductive step:} Assume every integer from $2$ to $k$ can be written as a product of primes. Consider $k + 1$.
+
+Case 1: If $k + 1$ is prime, then it is a product of primes.
+
+Case 2: If $k + 1$ is composite, then $k + 1 = ab$ for some integers $a, b$ with $2 \leq a, b < k + 1$. By the inductive hypothesis, both $a$ and $b$ can be written as products of primes. Therefore, $k + 1 = ab$ is also a product of primes.
+
+By strong induction, every integer $n \geq 2$ can be written as a product of primes.
+\end{proof}
+
+\end{document}
