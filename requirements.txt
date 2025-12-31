@@ -1,0 +1,11 @@
+# Data preparation
+pymupdf>=1.23.0  # For PDF processing (install with: pip install pymupdf)
+
+# For fine-tuning (install in Colab/training environment)
+# unsloth
+# transformers>=4.56.0
+# datasets
+# trl
+# peft
+# bitsandbytes
+# accelerate
