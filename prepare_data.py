@@ -187,8 +187,8 @@ def generate_instruction_pairs(item: ExtractedItem) -> list[dict]:
         if item.associated_proof:
             # Full proof request
             pairs.append({
-                "instruction": f"State and prove {theorem_name}.",
-                "input": "",
+                "instruction": f"State and prove the following theorem.",
+                "input": theorem_name,
                 "output": f"**{item.item_type.capitalize()}:** {item.content}\n\n**Proof:** {item.associated_proof}"
             })
             # Just proof request
@@ -221,8 +221,8 @@ def generate_instruction_pairs(item: ExtractedItem) -> list[dict]:
             })
         # Also generate hint version
         pairs.append({
-            "instruction": f"Give me a hint for solving: {item.content}",
-            "input": "",
+            "instruction": f"Give me a hint for solving the following problem.",
+            "input": item.content,
             "output": generate_hint(item)
         })
 
