@@ -576,6 +576,74 @@ def process_annotated_file(filepath: Path) -> list[dict]:
     return pairs
 
 
+def process_hints_file(filepath: Path) -> list[dict]:
+    """
+    Process a hints template file and generate training pairs.
+
+    The hints file should have entries like:
+    {
+        "topic": "induction",
+        "problem": "Prove that...",
+        "hint_level_1": "First hint",
+        "hint_level_2": "More detailed hint",
+        "hint_level_3": "Almost giving it away",
+        "common_mistake": "Watch out for..."
+    }
+    """
+    with open(filepath, 'r', encoding='utf-8') as f:
+        hints = json.load(f)
+
+    pairs = []
+    for hint in hints:
+        problem = hint.get('problem', '')
+        topic = hint.get('topic', 'math')
+
+        # Generate progressive hint requests
+        if hint.get('hint_level_1'):
+            pairs.append({
+                'instruction': f"I'm stuck on this problem: {problem}\nCan you give me a small hint?",
+                'input': '',
+                'output': hint['hint_level_1'],
+                'source_file': 'hints'
+            })
+
+        if hint.get('hint_level_2'):
+            pairs.append({
+                'instruction': f"I need more help with: {problem}\nI understand I need to start somewhere but I'm not sure how to proceed.",
+                'input': '',
+                'output': hint['hint_level_2'],
+                'source_file': 'hints'
+            })
+
+        if hint.get('hint_level_3'):
+            pairs.append({
+                'instruction': f"I'm really struggling with: {problem}\nCan you walk me through the key steps without giving the full answer?",
+                'input': '',
+                'output': hint['hint_level_3'],
+                'source_file': 'hints'
+            })
+
+        # Common mistakes are valuable teaching moments
+        if hint.get('common_mistake'):
+            pairs.append({
+                'instruction': f"What's a common mistake students make when solving: {problem}",
+                'input': '',
+                'output': hint['common_mistake'],
+                'source_file': 'hints'
+            })
+
+        # Also generate a "how do I approach this" question
+        if hint.get('hint_level_1'):
+            pairs.append({
+                'instruction': f"How should I approach this {topic} problem? {problem}",
+                'input': '',
+                'output': hint['hint_level_1'],
+                'source_file': 'hints'
+            })
+
+    return pairs
+
+
 def main():
     parser = argparse.ArgumentParser(description='Convert course materials to training data')
     parser.add_argument('--input_dir', type=str,
@@ -590,6 +658,8 @@ def main():
                         help='Export PDF chunks for manual annotation instead of auto-parsing')
     parser.add_argument('--annotated_file', type=str, default=None,
                         help='Process a manually annotated JSON file')
+    parser.add_argument('--hints_file', type=str, default=None,
+                        help='JSON file with hint templates (see hints_template.json)')
     args = parser.parse_args()
 
     all_pairs = []
@@ -620,6 +690,14 @@ def main():
         pairs = process_annotated_file(annotated_path)
         all_pairs.extend(pairs)
         print(f"  Loaded {len(pairs)} training pairs")
+
+    # Process hints file if specified
+    if args.hints_file:
+        hints_path = Path(args.hints_file)
+        print(f"Processing hints file: {hints_path}...")
+        pairs = process_hints_file(hints_path)
+        all_pairs.extend(pairs)
+        print(f"  Generated {len(pairs)} hint training pairs")
 
     # Process LaTeX files if input_dir specified
     if args.input_dir:

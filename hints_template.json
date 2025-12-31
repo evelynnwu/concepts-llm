@@ -1,0 +1,42 @@
+[
+  {
+    "topic": "induction",
+    "problem": "Prove that for all n ≥ 1, 1 + 2 + ... + n = n(n+1)/2",
+    "hint_level_1": "This is a classic induction problem. What two things do you need to show?",
+    "hint_level_2": "For the base case, check n=1. For the inductive step, assume the formula holds for k and try to show it holds for k+1.",
+    "hint_level_3": "In the inductive step, write out the sum for k+1: (1+2+...+k) + (k+1). Use your inductive hypothesis on the first part.",
+    "common_mistake": "Don't forget to clearly state your inductive hypothesis before using it!"
+  },
+  {
+    "topic": "sets",
+    "problem": "Prove that A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C)",
+    "hint_level_1": "To prove two sets are equal, what do you need to show?",
+    "hint_level_2": "Show mutual inclusion: prove ⊆ in both directions. Pick an arbitrary element from one side and show it's in the other.",
+    "hint_level_3": "Let x ∈ A ∩ (B ∪ C). Then x ∈ A and x ∈ B ∪ C. What are the two cases for x ∈ B ∪ C?",
+    "common_mistake": "Remember: x ∈ B ∪ C means x ∈ B OR x ∈ C (or both), not AND!"
+  },
+  {
+    "topic": "contradiction",
+    "problem": "Prove that √2 is irrational",
+    "hint_level_1": "What proof technique works well when you're proving something is NOT in a set (like not being rational)?",
+    "hint_level_2": "Assume √2 = p/q where p,q are integers with no common factors. What equation do you get?",
+    "hint_level_3": "From p² = 2q², what can you conclude about p? Then what does that tell you about q?",
+    "common_mistake": "Make sure you explain why p/q having no common factors matters!"
+  },
+  {
+    "topic": "functions",
+    "problem": "Prove that f: A → B is bijective iff f has an inverse",
+    "hint_level_1": "This is an 'if and only if' proof. What two directions do you need to show?",
+    "hint_level_2": "For (⇒): If f is bijective, how would you define g: B → A? Use surjectivity and injectivity.",
+    "hint_level_3": "For (⇐): If g is an inverse, show f is injective by supposing f(x₁) = f(x₂) and applying g to both sides.",
+    "common_mistake": "When proving a function is well-defined, make sure each input maps to exactly one output!"
+  },
+  {
+    "topic": "counting",
+    "problem": "How many ways can you arrange the letters in MISSISSIPPI?",
+    "hint_level_1": "Are all the letters distinct? If not, how does that affect counting?",
+    "hint_level_2": "If all 11 letters were distinct, there would be 11! arrangements. But we're overcounting - why?",
+    "hint_level_3": "Divide by the factorials of repeated letters: 4 I's, 4 S's, 2 P's. So it's 11!/(4!4!2!).",
+    "common_mistake": "Don't forget that M appears only once - no need to divide by 1!"
+  }
+]
